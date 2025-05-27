@@ -1,5 +1,6 @@
 import pygame
 import math
+import os
 
 def set_background(WINDOW_WIDTH, WINDOW_HEIGHT):
     background = pygame.image.load('Assets\main_background.jpg')
@@ -47,17 +48,7 @@ def show_position(screen, player_pos):
     screen.blit(coord_text, (10, 10))
 
 def update_enemy_bullets(enemy_pos, bullets, player_pos, player_radius, FIELD_WIDTH, FIELD_HEIGHT):
-    """
-    Manages enemy bullets: spawns downward bullets, updates positions, checks collisions.
-    Args:
-        enemy_pos: List [x, y] for enemy's center position.
-        bullets: List of (rect, speed) tuples for bullets.
-        player_hitbox: Pygame Rect for player's hitbox.
-        FIELD_WIDTH, FIELD_HEIGHT: Playable field dimensions.
-    Returns:
-        Tuple: (bullets, game_over) where bullets is the updated list and game_over is True if player is hit.
-    """
-    # Spawn bullets every 0.5 seconds (30 frames at 60 FPS)
+
     bullet_spawn_timer = getattr(update_enemy_bullets, 'timer', 0)
     bullet_spawn_timer += 1
     if bullet_spawn_timer >= 30:
@@ -67,7 +58,6 @@ def update_enemy_bullets(enemy_pos, bullets, player_pos, player_radius, FIELD_WI
         bullet_spawn_timer = 0
     update_enemy_bullets.timer = bullet_spawn_timer
 
-    # Update bullets and check collisions
     game_over = False
     bullet_radius = 4  # Bullets are drawn as 8-pixel diameter circles
     for bullet, speed in bullets[:]:
@@ -87,3 +77,23 @@ def update_enemy_bullets(enemy_pos, bullets, player_pos, player_radius, FIELD_WI
                 bullets.remove((bullet, speed))  # Optional: remove bullet on hit
 
     return bullets, game_over
+
+import pygame
+
+def get_sprite_frames(sprite_sheet, start_x, start_y, frame_width, frame_height, num_frames):
+    frames = []
+    output_dir = "frames"
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
+
+    for i in range(num_frames):
+        x = start_x + (i * frame_width)
+        y = start_y
+        frame_rect = pygame.Rect(x, y, frame_width, frame_height)
+        frame = sprite_sheet.subsurface(frame_rect)
+        frames.append(frame)
+        filename = os.path.join(output_dir, f"frame_{i}.png")
+        pygame.image.save(frame, filename)
+        print(f"Saved {filename}")
+        
+    return frames
