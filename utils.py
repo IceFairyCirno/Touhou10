@@ -10,13 +10,16 @@ def set_background(WINDOW_WIDTH, WINDOW_HEIGHT):
     return screen, background
 
 def read_move(player_pos, player_radius, player_speed, keys, FIELD_WIDTH, FIELD_HEIGHT):
+    direction = 0
     dx, dy = 0, 0
     speed = player_speed - 2 if keys[pygame.K_LSHIFT] else player_speed
 
     if keys[pygame.K_LEFT]:
         dx -= speed
+        direction = "left"
     if keys[pygame.K_RIGHT]:
         dx += speed
+        direction = "right"
     if keys[pygame.K_UP]:
         dy -= speed
     if keys[pygame.K_DOWN]:
@@ -35,8 +38,8 @@ def read_move(player_pos, player_radius, player_speed, keys, FIELD_WIDTH, FIELD_
 
     player_pos[0] = new_x
     player_pos[1] = new_y
-
-    return player_pos
+    
+    return player_pos, direction
 
 def show_position(screen, player_pos):
     font = pygame.font.Font(None, 24)
@@ -76,11 +79,11 @@ def update_enemy_bullets(enemy_pos, bullets, player_pos, player_radius, FIELD_WI
 
 import pygame
 
-def get_sprite_frames(sprite_sheet, start_x, start_y, frame_width, frame_height, num_frames):
+def get_sprite_frames(sprite_sheet, start_x, start_y, frame_width, frame_height, num_frames, direction):
     frames = []
     output_dir = "frames"
-    if not os.path.exists(output_dir):
-        os.makedirs(output_dir)
+    #if not os.path.exists(output_dir):
+        #os.makedirs(output_dir)
 
     for i in range(num_frames):
         x = start_x + (i * frame_width)
@@ -88,14 +91,19 @@ def get_sprite_frames(sprite_sheet, start_x, start_y, frame_width, frame_height,
         frame_rect = pygame.Rect(x, y, frame_width, frame_height)
         frame = sprite_sheet.subsurface(frame_rect)
         frames.append(frame)
-        #filename = os.path.join(output_dir, f"frame_{i}.png")
+        #filename = os.path.join(output_dir, f"{direction}_frame_{i}.png")
         #pygame.image.save(frame, filename)
         #print(f"Saved {filename}")
     return frames
-
+"""
 def get_current_frame(frames, frame_timer, current_frame):
     frame_timer += 1
     if frame_timer >= 10:
         frame_timer = 0
         current_frame = (current_frame + 1) % len(frames)
     return frame_timer, current_frame
+"""
+def get_next_frame(frames, frame_timer, direction):
+    frame_index = min(int(frame_timer / 7.5), 7)
+    print(frame_index)
+    return frames[frame_index]
