@@ -38,7 +38,7 @@ def read_move(player_pos, player_radius, player_speed, keys, FIELD_WIDTH, FIELD_
 
     player_pos[0] = new_x
     player_pos[1] = new_y
-    
+    print(direction)
     return player_pos, direction
 
 def show_position(screen, player_pos):
@@ -104,6 +104,9 @@ def get_current_frame(frames, frame_timer, current_frame):
     return frame_timer, current_frame
 """
 def get_next_frame(frames, frame_timer, direction):
-    frame_index = min(int(frame_timer / 7.5), 7)
-    print(frame_index)
+    frame_index=0
+    if direction==0:
+        frame_index = min(int(frame_timer / 7.5), 7)
+    else:
+        frame_index = (int(frame_timer / 7.5) % 5) + 3
     return frames[frame_index]
