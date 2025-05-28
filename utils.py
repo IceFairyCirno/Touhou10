@@ -9,11 +9,7 @@ def set_background(WINDOW_WIDTH, WINDOW_HEIGHT):
     screen.blit(background, (0, 0))
     return screen, background
 
-import pygame
-
 def read_move(player_pos, player_radius, player_speed, keys, FIELD_WIDTH, FIELD_HEIGHT):
-    # Remove redundant keys assignment (use the passed parameter)
-    # Normalize diagonal movement
     dx, dy = 0, 0
     speed = player_speed - 2 if keys[pygame.K_LSHIFT] else player_speed
 
@@ -92,8 +88,14 @@ def get_sprite_frames(sprite_sheet, start_x, start_y, frame_width, frame_height,
         frame_rect = pygame.Rect(x, y, frame_width, frame_height)
         frame = sprite_sheet.subsurface(frame_rect)
         frames.append(frame)
-        filename = os.path.join(output_dir, f"frame_{i}.png")
-        pygame.image.save(frame, filename)
-        print(f"Saved {filename}")
-        
+        #filename = os.path.join(output_dir, f"frame_{i}.png")
+        #pygame.image.save(frame, filename)
+        #print(f"Saved {filename}")
     return frames
+
+def get_current_frame(frames, frame_timer, current_frame):
+    frame_timer += 1
+    if frame_timer >= 10:
+        frame_timer = 0
+        current_frame = (current_frame + 1) % len(frames)
+    return frame_timer, current_frame
