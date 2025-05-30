@@ -38,11 +38,10 @@ def read_move(player_pos, player_radius, player_speed, keys, FIELD_WIDTH, FIELD_
 
     player_pos[0] = new_x
     player_pos[1] = new_y
-    print(direction)
     return player_pos, direction
 
 def show_position(screen, player_pos):
-    font = pygame.font.Font(None, 24)
+    font = pygame.font.Font(None, 22)
     coord_text = font.render(f'X: {int(player_pos[0])}, Y: {int(player_pos[1])}', True, (255, 255, 255))
     screen.blit(coord_text, (10, 10))
 
@@ -77,7 +76,20 @@ def update_enemy_bullets(enemy_pos, bullets, player_pos, player_radius, FIELD_WI
 
     return bullets, game_over
 
-import pygame
+def player_shoot(player_centroid, player_bullets):
+    bullet = pygame.Rect(player_centroid[0], player_centroid[1]-28, 3, 3)
+    speed = [0, -12]
+    player_bullets.append((bullet, speed))
+    return player_bullets
+
+def update_bullets(bullets, FIELD_WIDTH, FIELD_HEIGHT):
+    for bullet, speed in bullets[:]:
+        bullet.x += speed[0]
+        bullet.y += speed[1]
+        if not (0 <= bullet.x <= FIELD_WIDTH + 62 and 0 <= bullet.y <= FIELD_HEIGHT + 32):
+            bullets.remove((bullet, speed))
+
+
 
 def get_sprite_frames(sprite_sheet, start_x, start_y, frame_width, frame_height, num_frames, direction):
     frames = []
