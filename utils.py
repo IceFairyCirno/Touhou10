@@ -9,37 +9,6 @@ def set_background(WINDOW_WIDTH, WINDOW_HEIGHT):
     screen.blit(background, (0, 0))
     return screen, background
 
-def read_move(player_pos, player_radius, player_speed, keys, FIELD_WIDTH, FIELD_HEIGHT):
-    direction = 0
-    dx, dy = 0, 0
-    speed = player_speed - 2 if keys[pygame.K_LSHIFT] else player_speed
-
-    if keys[pygame.K_LEFT]:
-        dx -= speed
-        direction = "left"
-    if keys[pygame.K_RIGHT]:
-        dx += speed
-        direction = "right"
-    if keys[pygame.K_UP]:
-        dy -= speed
-    if keys[pygame.K_DOWN]:
-        dy += speed
-
-    if dx != 0 and dy != 0:
-        diagonal_factor = speed / (2 ** 0.5)
-        dx *= diagonal_factor / speed
-        dy *= diagonal_factor / speed
-
-    new_x = player_pos[0] + dx
-    new_y = player_pos[1] + dy
-
-    new_x = max(39 + player_radius, min(new_x, FIELD_WIDTH + 41 - player_radius))
-    new_y = max(21 + player_radius, min(new_y, FIELD_HEIGHT + 21 - player_radius))
-
-    player_pos[0] = new_x
-    player_pos[1] = new_y
-    return player_pos, direction
-
 def show_position(screen, player_pos):
     font = pygame.font.Font(None, 22)
     coord_text = font.render(f'X: {int(player_pos[0])}, Y: {int(player_pos[1])}', True, (255, 255, 255))
@@ -76,12 +45,6 @@ def update_enemy_bullets(enemy_pos, bullets, player_pos, player_radius, FIELD_WI
 
     return bullets, game_over
 
-def player_shoot(player_centroid, player_bullets):
-    bullet = pygame.Rect(player_centroid[0], player_centroid[1]-28, 3, 3)
-    speed = [0, -12]
-    player_bullets.append((bullet, speed))
-    return player_bullets
-
 def update_bullets(bullets, FIELD_WIDTH, FIELD_HEIGHT):
     for bullet, speed in bullets[:]:
         bullet.x += speed[0]
@@ -89,13 +52,12 @@ def update_bullets(bullets, FIELD_WIDTH, FIELD_HEIGHT):
         if not (0 <= bullet.x <= FIELD_WIDTH + 62 and 0 <= bullet.y <= FIELD_HEIGHT + 32):
             bullets.remove((bullet, speed))
 
-
-
-def get_sprite_frames(sprite_sheet, start_x, start_y, frame_width, frame_height, num_frames, direction):
+def get_sprite_frames(sprite_sheet, start_x, start_y, frame_width, frame_height, num_frames, direction, debug=False):
     frames = []
-    output_dir = "frames"
-    #if not os.path.exists(output_dir):
-        #os.makedirs(output_dir)
+    if debug:
+        output_dir = "frames"
+        if not os.path.exists(output_dir):
+            os.makedirs(output_dir)
 
     for i in range(num_frames):
         x = start_x + (i * frame_width)
@@ -103,18 +65,12 @@ def get_sprite_frames(sprite_sheet, start_x, start_y, frame_width, frame_height,
         frame_rect = pygame.Rect(x, y, frame_width, frame_height)
         frame = sprite_sheet.subsurface(frame_rect)
         frames.append(frame)
-        #filename = os.path.join(output_dir, f"{direction}_frame_{i}.png")
-        #pygame.image.save(frame, filename)
-        #print(f"Saved {filename}")
+        if debug:
+            filename = os.path.join(output_dir, f"{direction}_frame_{i}.png")
+            pygame.image.save(frame, filename)
+            print(f"Saved {filename}")
     return frames
-"""
-def get_current_frame(frames, frame_timer, current_frame):
-    frame_timer += 1
-    if frame_timer >= 10:
-        frame_timer = 0
-        current_frame = (current_frame + 1) % len(frames)
-    return frame_timer, current_frame
-"""
+
 def get_next_frame(frames, frame_timer, direction):
     frame_index=0
     if direction==0:
@@ -122,3 +78,4 @@ def get_next_frame(frames, frame_timer, direction):
     else:
         frame_index = (int(frame_timer / 7.5) % 5) + 3
     return frames[frame_index]
+
