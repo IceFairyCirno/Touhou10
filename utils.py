@@ -46,11 +46,11 @@ def update_enemy_bullets(enemy_pos, bullets, player_pos, player_radius, FIELD_WI
     return bullets, game_over
 
 def update_bullets(bullets, FIELD_WIDTH, FIELD_HEIGHT):
-    for bullet, speed in bullets[:]:
+    for bullet, speed, damage in bullets[:]:
         bullet.x += speed[0]
         bullet.y += speed[1]
         if not (0 <= bullet.x <= FIELD_WIDTH + 62 and 0 <= bullet.y <= FIELD_HEIGHT + 32):
-            bullets.remove((bullet, speed))
+            bullets.remove((bullet, speed, damage))
 
 def get_sprite_frames(sprite_sheet, start_x, start_y, frame_width, frame_height, num_frames, direction, debug=False):
     frames = []
@@ -78,4 +78,17 @@ def get_next_frame(frames, frame_timer, direction):
     else:
         frame_index = (int(frame_timer / 7.5) % 5) + 3
     return frames[frame_index]
+
+class Bullet:
+    def __init__(self, radius, speed, damage, position):
+        self.radius = radius
+        self.speed = speed
+        self.damage = damage
+        self.position = position
+        self.hitbox = pygame.Rect(position[0]-radius, position[1]-radius, radius, radius)
+        
+    def update(self):
+        pass
+        
+
 

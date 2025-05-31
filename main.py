@@ -16,13 +16,9 @@ BLACK = (0, 0, 0)
 GREEN = (0, 255, 0)
 WHITE = (255, 255, 255)
 
-player_stand_frames = get_sprite_frames(sprite_sheet, 16, 16, 32, 48, 8, "up or down")
-player_right_frames = get_sprite_frames(sprite_sheet, 16, 112, 32, 48, 8, "right")
-player_left_frames = get_sprite_frames(sprite_sheet, 16, 64, 32, 48, 8, "left")
-
 frame_timer = 0
 
-player = Player([(FIELD_WIDTH//2)+31+16, (4*FIELD_HEIGHT//5)+16+24], 5, [(FIELD_WIDTH//2)+31, (4*FIELD_HEIGHT//5)+16], 4, [], 0)
+player = Player([(FIELD_WIDTH//2)+31+16, (4*FIELD_HEIGHT//5)+16+24], 5, [(FIELD_WIDTH//2)+31, (4*FIELD_HEIGHT//5)+16], 4, [], 0, sprite_sheet)
 
 enemy_pos = [(FIELD_WIDTH//2)+31, 70]
 enemy_stand_frames = get_sprite_frames(sprite_sheet, 282, 16, 32, 48, 8, "up or down")
@@ -32,7 +28,6 @@ clock = pygame.time.Clock()
 
 bullets=[]
 
-    
 while running:
     keys = pygame.key.get_pressed()
 
@@ -44,16 +39,18 @@ while running:
 
     #player
     player.read_move(keys, FIELD_WIDTH, FIELD_HEIGHT)
-    current_frame = player_stand_frames if player.direction==0 else (player_right_frames if player.direction=="right" else player_left_frames)
-    current_frame = get_next_frame(current_frame, frame_timer, player.direction)
+    current_frame = player.frame_to_display(frame_timer)
     screen.blit(current_frame, player.sprite_pos)
+
     if (keys[pygame.K_LSHIFT]):
         pygame.draw.circle(screen, BLACK, player.centroid, player.radius)
         pygame.draw.circle(screen, WHITE, player.centroid, player.radius-2)
+
     if (keys[pygame.K_z]):
         player.shoot()
+
     update_bullets(player.bullets, FIELD_WIDTH, FIELD_HEIGHT)
-    for bullet, _ in player.bullets:
+    for bullet, _, _ in player.bullets:
         pygame.draw.circle(screen, (0, 255, 0), bullet.center, 4)
 
 
