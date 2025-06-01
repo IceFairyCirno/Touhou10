@@ -1,9 +1,10 @@
 import pygame
 import math
 import os
+import random
 
 def set_background(WINDOW_WIDTH, WINDOW_HEIGHT):
-    background = pygame.image.load('Assets\main_background.jpg')
+    background = pygame.image.load('Assets\main_background.png')
     screen = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
     background = pygame.transform.scale(background, (WINDOW_WIDTH, WINDOW_HEIGHT))
     screen.blit(background, (0, 0))
@@ -12,45 +13,10 @@ def set_background(WINDOW_WIDTH, WINDOW_HEIGHT):
 def show_position(screen, player_pos):
     font = pygame.font.Font(None, 22)
     coord_text = font.render(f'X: {int(player_pos[0])}, Y: {int(player_pos[1])}', True, (255, 255, 255))
-    screen.blit(coord_text, (10, 10))
-
-def update_enemy_bullets(enemy_pos, bullets, player_pos, player_radius, FIELD_WIDTH, FIELD_HEIGHT):
-
-    bullet_spawn_timer = getattr(update_enemy_bullets, 'timer', 0)
-    bullet_spawn_timer += 1
-    if bullet_spawn_timer >= 30:
-        bullet = pygame.Rect(enemy_pos[0] - 4, enemy_pos[1], 8, 8)  # 8x8 bullet at enemy center
-        speed = [0, 3]  # Downward speed
-        bullets.append((bullet, speed))
-        bullet_spawn_timer = 0
-    update_enemy_bullets.timer = bullet_spawn_timer
-
-    game_over = False
-    bullet_radius = 4  # Bullets are drawn as 8-pixel diameter circles
-    for bullet, speed in bullets[:]:
-        bullet.x += speed[0]
-        bullet.y += speed[1]
-        # Remove bullets that leave the screen
-        if not (0 <= bullet.x <= FIELD_WIDTH + 62 and 0 <= bullet.y <= FIELD_HEIGHT + 32):
-            bullets.remove((bullet, speed))
-        # Circle-circle collision with player
-        else:
-            # Distance between bullet center and player center
-            dx = bullet.centerx - player_pos[0]
-            dy = bullet.centery - player_pos[1]
-            distance = math.sqrt(dx**2 + dy**2)
-            if distance < player_radius + bullet_radius:
-                game_over = True
-                bullets.remove((bullet, speed))  # Optional: remove bullet on hit
-
-    return bullets, game_over
+    screen.blit(coord_text, (0, 578))
 
 def update_bullets(bullets, FIELD_WIDTH, FIELD_HEIGHT):
-    for bullet, speed, damage in bullets[:]:
-        bullet.x += speed[0]
-        bullet.y += speed[1]
-        if not (0 <= bullet.x <= FIELD_WIDTH + 62 and 0 <= bullet.y <= FIELD_HEIGHT + 32):
-            bullets.remove((bullet, speed, damage))
+    bullets[:] = [bullet for bullet in bullets if 75+8 <= bullet.position[0] <= FIELD_WIDTH + 75+8 and 37+8 <= bullet.position[1] <= FIELD_HEIGHT + 37+8]
 
 def get_sprite_frames(sprite_sheet, start_x, start_y, frame_width, frame_height, num_frames, direction, debug=False):
     frames = []
@@ -85,10 +51,44 @@ class Bullet:
         self.speed = speed
         self.damage = damage
         self.position = position
-        self.hitbox = pygame.Rect(position[0]-radius, position[1]-radius, radius, radius)
+        self.hitbox = pygame.Rect(position[0]-radius, position[1]-radius, 2*radius, 2*radius)
         
-    def update(self):
-        pass
+    def move(self):
+        self.position[0] += self.speed[0]
+        self.position[1] += self.speed[1]
+        self.hitbox.x = self.position[0] - self.radius
+        self.hitbox.y = self.position[1] - self.radius
+
+def random_move(FIELD_WIDTH, FIELD_HEIGHT):
+    x1, x2 = 75, 37
+    y1, y2 = x1+FIELD_WIDTH, x2+FIELD_HEIGHT
+    rand_x = random.uniform(x1, x2)
+    rand_y = random.uniform(y1, y2)
+    return [rand_x, rand_y]
+
+def move_through_path(enemy, path, current_target_index):
+
+    if current_target_index >= len(path):
+        return -1
+    
+    current_destination = path[current_target_index]
+
+    reached = enemy.move(current_destination)
+
+    if reached:
+        current_target_index += 1
+    
+    return current_target_index
+
+    
+    
+
+
+
+
+
+
+
         
 
 
