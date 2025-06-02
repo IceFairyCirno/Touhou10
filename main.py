@@ -47,19 +47,10 @@ while running:
     screen.blit(current_frame, player.sprite_pos)
 
     if (keys[pygame.K_LSHIFT]):
-        pygame.draw.circle(screen, BLACK, player.centroid, player.radius)
-        pygame.draw.circle(screen, WHITE, player.centroid, player.radius-2)
-
+        player.display_centroid(screen)
     if (keys[pygame.K_z]):
         player.shoot()
-
-    update_bullets(player.bullets, FIELD_WIDTH, FIELD_HEIGHT)
-    for bullet in player.bullets:
-        pygame.draw.circle(screen, (0, 255, 0), bullet.position, 4)
-        bullet.move()
-        if bullet.hitbox.colliderect(enemy.hitbox):
-            player.bullets.remove(bullet)
-            enemy.health -=10
+    player.update_bullet(screen, enemy)
 
     for event in pygame.event.get():
         if event.type == pygame.QUIT or (event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE):

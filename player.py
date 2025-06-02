@@ -54,6 +54,24 @@ class Player:
         current_frame = get_next_frame(frames, frame_timer, self.direction)
         return current_frame
     
+    def display_centroid(self, screen):
+        BLACK = (0, 0, 0)
+        WHITE = (255, 255, 255)
+        pygame.draw.circle(screen, BLACK, self.centroid, self.radius)
+        pygame.draw.circle(screen, WHITE, self.centroid, self.radius-2)
+
+    def update_bullet(self, screen, enemy):
+        for bullet in self.bullets:
+            pygame.draw.circle(screen, (0, 255, 0), bullet.position, bullet.radius)
+            bullet.move()
+            if bullet.hitbox.colliderect(enemy.hitbox):
+                self.bullets.remove(bullet)
+                enemy.health -=10
+        remove_outbound_bullets(self.bullets, 400, 525)
+        
+
+
+    
 class Enemy:
     def __init__(self, centroid, health, speed, bullets, sprite_sheet):
         self.centroid = centroid
