@@ -39,11 +39,8 @@ while running:
     #enemy
     enemy_current_frame = enemy.frame_to_display(frame_timer)
     screen.blit(enemy_current_frame, enemy.sprite_pos)
-
-    current_target_index = move_through_path(enemy, path, current_target_index)
-    if current_target_index == -1:
-        pass
-
+    if current_target_index != -1:
+        current_target_index = move_through_path(enemy, path, current_target_index)
     #player
     player.read_move(keys, FIELD_WIDTH, FIELD_HEIGHT)
     current_frame = player.frame_to_display(frame_timer)
