@@ -59,13 +59,6 @@ class Bullet:
         self.hitbox.x = self.position[0] - self.radius
         self.hitbox.y = self.position[1] - self.radius
 
-def random_move(FIELD_WIDTH, FIELD_HEIGHT):
-    x1, x2 = 75, 37
-    y1, y2 = x1+FIELD_WIDTH, x2+FIELD_HEIGHT
-    rand_x = random.uniform(x1, x2)
-    rand_y = random.uniform(y1, y2)
-    return [rand_x, rand_y]
-
 def move_through_path(enemy, path, current_target_index):
 
     if current_target_index >= len(path):

@@ -55,8 +55,8 @@ while running:
 
     update_bullets(player.bullets, FIELD_WIDTH, FIELD_HEIGHT)
     for bullet in player.bullets:
-        bullet.move()
         pygame.draw.circle(screen, (0, 255, 0), bullet.position, 4)
+        bullet.move()
         if bullet.hitbox.colliderect(enemy.hitbox):
             player.bullets.remove(bullet)
             enemy.health -=10
