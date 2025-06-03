@@ -45,9 +45,10 @@ class Player:
         self.centroid[1] = new_y
         self.sprite_pos = [self.centroid[0]-16, self.centroid[1]-24]
 
-    def shoot(self):
-        bullet = Bullet(4, [0, -12], 10, [self.centroid[0], self.centroid[1]-28])
-        self.bullets.append(bullet)
+    def shoot(self, sprite_sheet, frame_timer):
+        if frame_timer%10 ==0:
+            bullet = Bullet([0, -12],70, [self.centroid[0], self.centroid[1]-28], sprite_sheet)
+            self.bullets.append(bullet)
     
     def frame_to_display(self, frame_timer):
         frames = self.stand_frame if self.direction==0 else (self.right_frames if self.direction=="right" else self.left_frames)
@@ -60,20 +61,22 @@ class Player:
         pygame.draw.circle(screen, BLACK, self.centroid, self.radius)
         pygame.draw.circle(screen, WHITE, self.centroid, self.radius-2)
 
-    def update_bullet(self, screen, enemy):
+    def update_bullet(self, screen, enemys):
         for bullet in self.bullets:
-            pygame.draw.circle(screen, (0, 255, 0), bullet.position, bullet.radius)
+            screen.blit(bullet.sprite[0], bullet.sprite_pos)
             bullet.move()
-            if bullet.hitbox.colliderect(enemy.hitbox):
-                self.bullets.remove(bullet)
-                enemy.health -=10
-        remove_outbound_bullets(self.bullets, 400, 525)
+            for enemy in enemys:
+                if bullet.hitbox.colliderect(enemy.hitbox):
+                    self.bullets.remove(bullet)
+                    enemy.health -=10
+            remove_outbound_bullets(self.bullets, 400, 525)
         
 
 
     
 class Enemy:
-    def __init__(self, centroid, health, speed, bullets, sprite_sheet):
+    def __init__(self, identity, centroid, health, speed, bullets, sprite_sheet):
+        self.identity = identity
         self.centroid = centroid
         self.health = health
         self.speed = speed

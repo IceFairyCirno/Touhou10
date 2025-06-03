@@ -46,18 +46,21 @@ def get_next_frame(frames, frame_timer, direction):
     return frames[frame_index]
 
 class Bullet:
-    def __init__(self, radius, speed, damage, position):
-        self.radius = radius
+    def __init__(self, speed, damage, position, sprite_sheet):
         self.speed = speed
         self.damage = damage
         self.position = position
-        self.hitbox = pygame.Rect(position[0]-radius, position[1]-radius, 2*radius, 2*radius)
+        self.sprite = [pygame.transform.rotate(frame, 90) for frame in get_sprite_frames(sprite_sheet, 17, 194, 63, 12, 1, "up or down")]
+        self.sprite_pos = [position[0]-6, position[1]-(63//2)]
+        self.hitbox = pygame.Rect(position[0]-6, position[1]-(63//2), 12, 63)
         
     def move(self):
         self.position[0] += self.speed[0]
         self.position[1] += self.speed[1]
-        self.hitbox.x = self.position[0] - self.radius
-        self.hitbox.y = self.position[1] - self.radius
+        self.hitbox.x = self.position[0] - 6
+        self.hitbox.y = self.position[1] - (63//2)
+        self.sprite_pos = [self.position[0]-6, self.position[1]-(63//2)]
+
 
 def move_through_path(enemy, path, current_target_index):
     if current_target_index >= len(path):
