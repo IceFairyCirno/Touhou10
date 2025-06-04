@@ -3,6 +3,7 @@ from utils import*
 from player import*
 
 pygame.init()
+pygame.mixer.init()
 
 WINDOW_WIDTH, WINDOW_HEIGHT = 800, 600
 FIELD_WIDTH, FIELD_HEIGHT = 400, 525
@@ -32,6 +33,7 @@ running = True
 clock = pygame.time.Clock()
 game_started = False
 frame_timer = 0
+music = True
 
 
 while running:
@@ -43,10 +45,15 @@ while running:
         if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1 and not game_started:
             clicked_pos = pygame.mouse.get_pos()
             if start_button.get_rect(topleft=(WINDOW_WIDTH//2 - start_button.get_width()//2, 450)).collidepoint(clicked_pos):
+                pygame.mixer.music.stop()
                 display_loading_screen(screen)
                 game_started = True
 
     if not game_started:
+        if music:
+            pygame.mixer.music.load('Assets\menu_music.mp3')
+            pygame.mixer.music.set_volume(0.15)
+            pygame.mixer.music.play(-1, fade_ms=3000)
         screen.blit(menu, (0, 0))
         screen.blit(title, (WINDOW_WIDTH//2 - title.get_width()//2, 90))
         screen.blit(start_button, (WINDOW_WIDTH//2 - start_button.get_width()//2, 450))
@@ -56,6 +63,7 @@ while running:
             screen.blit(hovered_start_button, (WINDOW_WIDTH//2 - hovered_start_button.get_width()//2, 450))
         else:
             screen.blit(start_button, (WINDOW_WIDTH//2 - start_button.get_width()//2, 450))
+        music = False
 
     #Main Game Loop
     if game_started:
