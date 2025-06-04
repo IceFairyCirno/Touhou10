@@ -3,12 +3,32 @@ import math
 import os
 import random
 
-def set_background(WINDOW_WIDTH, WINDOW_HEIGHT):
+def load_background(WINDOW_WIDTH, WINDOW_HEIGHT):
     background = pygame.image.load('Assets\main_background.png')
-    screen = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
     background = pygame.transform.scale(background, (WINDOW_WIDTH, WINDOW_HEIGHT))
-    screen.blit(background, (0, 0))
-    return screen, background
+    return background
+
+def load_menu(WINDOW_WIDTH, WINDOW_HEIGHT):
+    menu_background = pygame.image.load('Assets\Menu_resized.jpg')
+    sprite_sheet = pygame.image.load('Assets\Menu_items_sheet.png').convert_alpha()
+    menu_background = pygame.transform.scale(menu_background, (WINDOW_WIDTH, WINDOW_HEIGHT))
+    title_rect = pygame.Rect(45, 550, 507, 105)
+    title = sprite_sheet.subsurface(title_rect)
+    hovered_start_button_rect = pygame.Rect(693, 49, 148, 28)
+    hovered_start_button = sprite_sheet.subsurface(hovered_start_button_rect)
+    start_button_rect = pygame.Rect(853, 49, 148, 28)
+    start_button = sprite_sheet.subsurface(start_button_rect)
+    return menu_background, title, start_button, hovered_start_button
+
+def fade(screen, fade_color=(0, 0, 0), fade_duration_ms=2000, out=True):
+    fade_surface = pygame.Surface(screen.get_size())
+    fade_surface.fill(fade_color)
+    for alpha in range(0 if out else 255, 256 if out else -1, 5 if out else -5):
+        fade_surface.set_alpha(alpha)
+        screen.blit(fade_surface, (0, 0))
+        pygame.display.flip()
+        pygame.time.delay(10)
+    pygame.time.delay(fade_duration_ms)
 
 def show_position(screen, player_pos):
     font = pygame.font.Font(None, 22)
@@ -16,7 +36,7 @@ def show_position(screen, player_pos):
     screen.blit(coord_text, (0, 578))
 
 def remove_outbound_bullets(bullets, FIELD_WIDTH, FIELD_HEIGHT):
-    bullets[:] = [bullet for bullet in bullets if 75+8 <= bullet.position[0] <= FIELD_WIDTH + 75+8 and 37+8 <= bullet.position[1] <= FIELD_HEIGHT + 37+8]
+    bullets[:] = [bullet for bullet in bullets if 75+6 <= bullet.position[0] <= FIELD_WIDTH + 75+6 and 37+(63//2) <= bullet.position[1] <= FIELD_HEIGHT + 37+(63//2)]
 
 def get_sprite_frames(sprite_sheet, start_x, start_y, frame_width, frame_height, num_frames, direction, debug=False):
     frames = []

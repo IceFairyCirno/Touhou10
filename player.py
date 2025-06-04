@@ -45,10 +45,11 @@ class Player:
         self.centroid[1] = new_y
         self.sprite_pos = [self.centroid[0]-16, self.centroid[1]-24]
 
-    def shoot(self, sprite_sheet, frame_timer):
-        if frame_timer%10 ==0:
-            bullet = Bullet([0, -12],70, [self.centroid[0], self.centroid[1]-28], sprite_sheet)
-            self.bullets.append(bullet)
+    def shoot(self, sprite_sheet, frame_timer, rate):
+        if frame_timer%rate ==0:
+            x, y = self.centroid
+            bullet, bullet2 = Bullet([0, -12], 70, [x-10, y-28], sprite_sheet), Bullet([0, -12], 70, [x+10, y-28], sprite_sheet)
+            self.bullets.extend([bullet, bullet2])
     
     def frame_to_display(self, frame_timer):
         frames = self.stand_frame if self.direction==0 else (self.right_frames if self.direction=="right" else self.left_frames)
