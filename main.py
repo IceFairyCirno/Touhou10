@@ -44,14 +44,12 @@ while running:
         if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1 and not game_started:
             clicked_pos = pygame.mouse.get_pos()
             if start_button.get_rect(topleft=(WINDOW_WIDTH//2 - start_button.get_width()//2, 450)).collidepoint(clicked_pos):
-                fade(screen, fade_duration_ms=1000, out=True)
-                fade(screen, fade_duration_ms=500, out=False)
+                loading_screen(screen)
                 game_started = True
-
 
     if not game_started:
         screen.blit(menu, (0, 0))
-        screen.blit(title, (WINDOW_WIDTH//2 - title.get_width()//2, 70))
+        screen.blit(title, (WINDOW_WIDTH//2 - title.get_width()//2, 90))
         screen.blit(start_button, (WINDOW_WIDTH//2 - start_button.get_width()//2, 450))
 
         hover_pos = pygame.mouse.get_pos()
@@ -85,7 +83,9 @@ while running:
             player.shoot(sprite_sheet, frame_timer, 5)
         player.update_bullet(screen, enemys)
 
-    show_position(screen, player.centroid)
+        show_position(screen, player.centroid)
+
+
     pygame.display.flip()
     clock.tick(60)
     frame_timer = (frame_timer+1) if frame_timer < 60 else 0

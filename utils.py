@@ -20,15 +20,24 @@ def load_menu(WINDOW_WIDTH, WINDOW_HEIGHT):
     start_button = sprite_sheet.subsurface(start_button_rect)
     return menu_background, title, start_button, hovered_start_button
 
-def fade(screen, fade_color=(0, 0, 0), fade_duration_ms=2000, out=True):
+def fade(screen, fade_color=(0, 0, 0), out=True):
     fade_surface = pygame.Surface(screen.get_size())
     fade_surface.fill(fade_color)
     for alpha in range(0 if out else 255, 256 if out else -1, 5 if out else -5):
         fade_surface.set_alpha(alpha)
         screen.blit(fade_surface, (0, 0))
         pygame.display.flip()
-        pygame.time.delay(10)
-    pygame.time.delay(fade_duration_ms)
+        pygame.time.delay(30)
+
+def loading_screen(screen):
+    fade(screen, out=True)
+    sprite_sheet = pygame.image.load('Assets\Menu_items_sheet.png').convert_alpha()
+    loading_text_rect = pygame.Rect(1245, 539, 114, 24)
+    loading_text = sprite_sheet.subsurface(loading_text_rect)
+    screen.blit(loading_text, ((screen.get_width() - loading_text.get_width()) // 2, (screen.get_height() - loading_text.get_height()) // 2))
+    pygame.display.flip()
+    pygame.time.delay(3000)
+    
 
 def show_position(screen, player_pos):
     font = pygame.font.Font(None, 22)
