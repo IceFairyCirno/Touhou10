@@ -29,14 +29,18 @@ def fade(screen, fade_color=(0, 0, 0), out=True):
         pygame.display.flip()
         pygame.time.delay(30)
 
-def loading_screen(screen):
+def display_loading_screen(screen):
     fade(screen, out=True)
     sprite_sheet = pygame.image.load('Assets\Menu_items_sheet.png').convert_alpha()
     loading_text_rect = pygame.Rect(1245, 539, 114, 24)
     loading_text = sprite_sheet.subsurface(loading_text_rect)
     screen.blit(loading_text, ((screen.get_width() - loading_text.get_width()) // 2, (screen.get_height() - loading_text.get_height()) // 2))
     pygame.display.flip()
-    pygame.time.delay(3000)
+    for i in range(3):
+        pygame.draw.circle(screen, (255, 255, 255), (((screen.get_width() + loading_text.get_width())//2)+ 5+7*i , ((screen.get_height()//2) + loading_text.get_height() - 15)), 2)
+        pygame.display.flip()
+        pygame.time.delay(500)
+    pygame.time.delay(1000)
     
 
 def show_position(screen, player_pos):

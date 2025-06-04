@@ -48,7 +48,7 @@ class Player:
     def shoot(self, sprite_sheet, frame_timer, rate):
         if frame_timer%rate ==0:
             x, y = self.centroid
-            bullet, bullet2 = Bullet([0, -12], 70, [x-10, y-28], sprite_sheet), Bullet([0, -12], 70, [x+10, y-28], sprite_sheet)
+            bullet, bullet2 = Bullet([0, -12], 20, [x-10, y-28], sprite_sheet), Bullet([0, -12], 20, [x+10, y-28], sprite_sheet)
             self.bullets.extend([bullet, bullet2])
     
     def frame_to_display(self, frame_timer):
@@ -62,15 +62,20 @@ class Player:
         pygame.draw.circle(screen, BLACK, self.centroid, self.radius)
         pygame.draw.circle(screen, WHITE, self.centroid, self.radius-2)
 
-    def update_bullet(self, screen, enemys):
-        for bullet in self.bullets:
-            screen.blit(bullet.sprite[0], bullet.sprite_pos)
+    def update_bullet(self, screen, enemies):
+        bullets_to_remove = []
+    
+        for bullet in self.bullets[:]:
+            screen.blit(bullet.sprite[0], bullet.sprite_pos) 
             bullet.move()
-            for enemy in enemys:
+            for enemy in enemies[:]:
                 if bullet.hitbox.colliderect(enemy.hitbox):
-                    self.bullets.remove(bullet)
-                    enemy.health -=10
-            remove_outbound_bullets(self.bullets, 400, 525)
+                    bullets_to_remove.append(bullet)
+                    enemy.health -= bullet.damage
+        for bullet in bullets_to_remove:
+            if bullet in self.bullets:
+                self.bullets.remove(bullet)
+        remove_outbound_bullets(self.bullets, 400, 525)
         
 
 
