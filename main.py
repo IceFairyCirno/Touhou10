@@ -12,13 +12,15 @@ pygame.display.set_icon(pygame.image.load('Assets\icon.png'))
 pygame.display.set_caption("東方風神録2")
 screen = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
 background = load_background(WINDOW_WIDTH, WINDOW_HEIGHT)
+background_rect = pygame.Rect(75, 37, WINDOW_WIDTH, WINDOW_HEIGHT)
+main_background_edge = pygame.image.load('Assets\main_background_edge.png').convert_alpha()
 menu, title, start_button, hovered_start_button = load_menu(WINDOW_WIDTH, WINDOW_HEIGHT)
 sprite_sheet = pygame.image.load('Assets\spritesheet.png').convert_alpha()
+
 
 BLACK = (0, 0, 0)
 GREEN = (0, 255, 0)
 WHITE = (255, 255, 255)
-
 
 player_init_pos = [(FIELD_WIDTH//2)+75+16, (4*FIELD_HEIGHT//5)+37]
 player = Player(player_init_pos, radius=5, speed=4, bullets=[], sprite_sheet=sprite_sheet)
@@ -88,7 +90,7 @@ while running:
             player.display_centroid(screen)
         if (keys[pygame.K_z]):
             player.shoot(sprite_sheet, frame_timer, 5)
-        player.update_bullet(screen, enemys)
+        player.update_bullet(screen, enemys, background_rect, main_background_edge)
 
         show_position(screen, player.centroid)
 

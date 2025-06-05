@@ -48,8 +48,9 @@ def show_position(screen, player_pos):
     coord_text = font.render(f'X: {int(player_pos[0])}, Y: {int(player_pos[1])}', True, (255, 255, 255))
     screen.blit(coord_text, (0, 578))
 
-def remove_outbound_bullets(bullets, FIELD_WIDTH, FIELD_HEIGHT):
-    bullets[:] = [bullet for bullet in bullets if 75+6 <= bullet.position[0] <= FIELD_WIDTH + 75+6 and 37+(63//2) <= bullet.position[1] <= FIELD_HEIGHT + 37+(63//2)]
+def remove_outbound_bullets(bullets, background_rect):
+    # Remove bullets that are out of bounds
+    bullets[:] = [bullet for bullet in bullets if bullet.hitbox.colliderect(background_rect)]
 
 def get_sprite_frames(sprite_sheet, start_x, start_y, frame_width, frame_height, num_frames, direction, debug=False):
     frames = []
@@ -93,6 +94,7 @@ class Bullet:
         self.hitbox.x = self.position[0] - 6
         self.hitbox.y = self.position[1] - (63//2)
         self.sprite_pos = [self.position[0]-6, self.position[1]-(63//2)]
+        
 
 
 def move_through_path(enemy, path, current_target_index):

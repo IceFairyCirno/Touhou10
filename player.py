@@ -62,12 +62,14 @@ class Player:
         pygame.draw.circle(screen, BLACK, self.centroid, self.radius)
         pygame.draw.circle(screen, WHITE, self.centroid, self.radius-2)
 
-    def update_bullet(self, screen, enemies):
+    def update_bullet(self, screen, enemies, background_rect, main_background_edge):
         bullets_to_remove = []
     
         for bullet in self.bullets[:]:
-            screen.blit(bullet.sprite[0], bullet.sprite_pos) 
-            bullet.move()
+            screen.blit(bullet.sprite[0], bullet.sprite_pos) if bullet.hitbox.colliderect(background_rect) else bullets_to_remove.append(bullet)
+            screen.blit(main_background_edge, (0, 0))  # Redraw background to avoid bullet trails
+            enemies[0].display_health_bar(screen)
+            bullet.move() if bullet.hitbox.colliderect(background_rect) else bullets_to_remove.append(bullet)
             for enemy in enemies[:]:
                 if bullet.hitbox.colliderect(enemy.hitbox):
                     bullets_to_remove.append(bullet)
@@ -75,11 +77,9 @@ class Player:
         for bullet in bullets_to_remove:
             if bullet in self.bullets:
                 self.bullets.remove(bullet)
-        remove_outbound_bullets(self.bullets, 400, 525)
+        remove_outbound_bullets(self.bullets, background_rect)
         
 
-
-    
 class Enemy:
     def __init__(self, identity, centroid, health, speed, bullets, sprite_sheet):
         self.identity = identity
