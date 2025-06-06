@@ -95,8 +95,6 @@ class Bullet:
         self.hitbox.y = self.position[1] - (63//2)
         self.sprite_pos = [self.position[0]-6, self.position[1]-(63//2)]
         
-
-
 def move_through_path(enemy, path, current_target_index):
     if current_target_index >= len(path):
         return -1
@@ -106,6 +104,11 @@ def move_through_path(enemy, path, current_target_index):
         current_target_index += 1
     return current_target_index
 
+def rebuild_background(screen, enemies, main_background_edge):
+    screen.blit(main_background_edge, (0, 0))
+    for enemy in enemies:
+        if enemy.identity == "boss":
+            enemy.display_health_bar(screen)
     
     
 

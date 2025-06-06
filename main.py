@@ -28,7 +28,7 @@ player = Player(player_init_pos, radius=5, speed=4, bullets=[], sprite_sheet=spr
 enemy = Enemy("boss", [(FIELD_WIDTH//2)+75, 70], 10000, 2, [], sprite_sheet)
 path = [[100, 100], [400, 200], [300, 50], [288, 288]]
 current_target_index = 0
-enemys = [enemy]
+enemies = [enemy]
 
 
 running = True
@@ -71,11 +71,10 @@ while running:
     if game_started:
 
         screen.blit(background, (0, 0))
+        rebuild_background(screen, enemies, main_background_edge)
 
         #Enemy
-        for enemy in enemys:
-            if enemy.identity=="boss":
-                enemy.display_health_bar(screen)
+        for enemy in enemies:
             enemy_current_frame = enemy.frame_to_display(frame_timer)
             screen.blit(enemy_current_frame, enemy.sprite_pos)
             if current_target_index != -1:
@@ -90,7 +89,7 @@ while running:
             player.display_centroid(screen)
         if (keys[pygame.K_z]):
             player.shoot(sprite_sheet, frame_timer, 5)
-        player.update_bullet(screen, enemys, background_rect, main_background_edge)
+        player.update_bullet(screen, enemies, background_rect, main_background_edge)
 
         show_position(screen, player.centroid)
 

@@ -38,8 +38,8 @@ class Player:
         new_x = self.centroid[0] + dx
         new_y = self.centroid[1] + dy
 
-        new_x = max(75 + self.radius, min(new_x, FIELD_WIDTH + 75 - self.radius))
-        new_y = max(37 + self.radius, min(new_y, FIELD_HEIGHT + 37 - self.radius))
+        new_x = max(75 + 32//2, min(new_x, FIELD_WIDTH + 75 - 32//2))
+        new_y = max(37 + 48//2, min(new_y, FIELD_HEIGHT + 37 - 48//2))
 
         self.centroid[0] = new_x
         self.centroid[1] = new_y
@@ -67,8 +67,7 @@ class Player:
     
         for bullet in self.bullets[:]:
             screen.blit(bullet.sprite[0], bullet.sprite_pos) if bullet.hitbox.colliderect(background_rect) else bullets_to_remove.append(bullet)
-            screen.blit(main_background_edge, (0, 0))  # Redraw background to avoid bullet trails
-            enemies[0].display_health_bar(screen)
+            rebuild_background(screen, enemies, main_background_edge)
             bullet.move() if bullet.hitbox.colliderect(background_rect) else bullets_to_remove.append(bullet)
             for enemy in enemies[:]:
                 if bullet.hitbox.colliderect(enemy.hitbox):
