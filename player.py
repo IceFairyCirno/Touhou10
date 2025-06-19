@@ -3,134 +3,153 @@ import math
 import os
 from utils import *
 
-class Player:
-    def __init__(self, centroid, radius, speed, bullets, sprite_sheet):
+Sanae_default_frames = [[3, 3, 26, 44], [35, 3, 26, 44], [67, 3, 26, 44], [99, 3, 26, 44], [131, 3, 26, 44], [163, 3, 26, 44], [195, 3, 26, 44], [227, 3, 26, 44]]
+Sanae_left_frames = [[3, 53, 26, 40], [33, 53, 28, 41], [64, 53, 27, 40], [99, 53, 28, 41], [131, 53, 28, 41], [163, 53, 28, 41], [195, 53, 28, 41], [227, 53, 28, 41]]
+Sanae_right_frames = [[5, 101, 26, 40], [37, 101, 28, 41], [68, 102, 27, 40], [99, 102, 28, 41], [131, 102, 28, 41], [163, 102, 28, 41], [195, 102, 28, 41], [227, 102, 28, 41]]
+
+class Player():
+    def __init__(self, centroid: list, radius, speed, lives, spellcard, sprite_sheet, frame_duration = 0.1):
+        #Player basic data
         self.centroid = centroid
         self.radius = radius
-        self.sprite_pos = [centroid[0]-16, centroid[1]-24]
         self.speed = speed
-        self.bullets = bullets
-        self.direction = 0
-        self.stand_frame = get_sprite_frames(sprite_sheet, 16, 16, 32, 48, 8, "up or down")
-        self.right_frames = get_sprite_frames(sprite_sheet, 16, 112, 32, 48, 8, "right")
-        self.left_frames = get_sprite_frames(sprite_sheet, 16, 64, 32, 48, 8, "left")
+        self.lives = lives
+        self.spellcard = spellcard
+
+        #Player sprite data
+        self.sprite_sheet = sprite_sheet
+        self.default_frames = load_frames(sprite_sheet, Sanae_default_frames, "default")
+        self.right_frames = load_frames(sprite_sheet, Sanae_right_frames, "right")
+        self.left_frames = load_frames(sprite_sheet, Sanae_left_frames, "left")
+        self.current_frames = self.default_frames
+        self.current_frame = 0
+
+        #Player position data (change based on centroid)
+        sprite_image = self.current_frames[self.current_frame]
+        self.sprite_pos = [self.centroid[0] - sprite_image.get_width()//2, self.centroid[1] - sprite_image.get_height()//2]
+        self.hitbox = Hitbox(self.centroid, 2*self.radius -1, 2*self.radius -1, 90)
+
+        #Player animation data
+        self.frame_timer = 0.0
+        self.frame_duration = frame_duration
+        self.play_once = False  # Whether to play animation once then loop last 4 frames
+        self.has_played_once = False  # Tracks if single playthrough is done
+        self.status = "stationary"  # Movement state: stationary, up, down, right, left, up_right, up_left, down_right, down_left
+        self.prev_status = "stationary"
+        self.is_last_four = False
+
+    def update_positions(self):
+        #Update the positions
+        sprite_image = self.current_frames[self.current_frame]
+        self.sprite_pos = [self.centroid[0] - sprite_image.get_width()//2, self.centroid[1] - sprite_image.get_height()//2]
+        self.hitbox.center = self.centroid
+        self.hitbox.update()
+
+    def draw(self, dt: float, screen: pygame.Surface):
+        """
+        Draw the current animation frame based on self.status, using frame_timer.
+        Each frame list has 8 frames. Loops all 8 default frames for stationary/up/down,
+        loops last 4 frames (indices 4–7) for right/left/diagonal.
+        Resets frame_timer and current_frame when transitioning to stationary/up/down.
+        dt: Delta time in seconds (from clock.tick(60)/1000.0)
+        screen: Pygame Surface to draw on
+        """
+        # Update frame timer
+        self.frame_timer += dt
+
+        # Check if transitioning to stationary/up/down from right/left/diagonal
+        if self.status in ("stationary", "up", "down") and self.prev_status not in ("stationary", "up", "down"):
+            self.current_frame = 0
+            self.frame_timer = 0.0
+            self.is_last_four = False
+
+        # Determine animation based on status
+        if self.status in ("stationary", "up", "down"):
+            self.current_frames = self.default_frames
+            self.is_last_four = False
+        elif self.status in ("right", "up_right", "down_right"):
+            self.current_frames = self.right_frames
+            self.is_last_four = True
+            self.current_frame = 4 + (self.current_frame % 4)  # Restrict to frames 4–7
+        elif self.status in ("left", "up_left", "down_left"):
+            self.current_frames = self.left_frames
+            self.is_last_four = True
+            self.current_frame = 4 + (self.current_frame % 4)  # Restrict to frames 4–7
+
+        # Update frame index based on frame_timer
+        while self.frame_timer >= self.frame_duration:
+            self.frame_timer -= self.frame_duration
+            self.current_frame += 1
+            if self.is_last_four:
+                self.current_frame = 4 + (self.current_frame % 4)  # Loop frames 4–7
+            else:
+                self.current_frame %= 8  # Loop all 8 frames
+
+        # Blit current frame
+        frame_index = int(self.current_frame) % 8
+        screen.blit(self.current_frames[frame_index], self.sprite_pos)
+
+        # Update previous status
+        self.prev_status = self.status
     
-    def read_move(self, keys, FIELD_WIDTH, FIELD_HEIGHT):
-        dx, dy = 0, 0
-        speed = self.speed - 2 if keys[pygame.K_LSHIFT] else self.speed
-        self.direction=0
+    def read_move(self, keys, field_box: Hitbox, screen):
+        dy, dx = 0, 0
+        speed = self.speed
+        #Slower is pressed left shift
+        if keys[pygame.K_LSHIFT]:
+            speed = self.speed - 2
+            self.display_centroid(screen)
+
+        #Check keys and update status
+        self.status = "stationary"
         if keys[pygame.K_LEFT]:
             dx -= speed
-            self.direction = "left"
+            self.status = "left"
         if keys[pygame.K_RIGHT]:
             dx += speed
-            self.direction = "right"
+            self.status = "right"
         if keys[pygame.K_UP]:
-            dy -= speed
+            dy -= speed 
+            self.status = "up"
         if keys[pygame.K_DOWN]:
             dy += speed
+            self.status = "down"
+        if not any(pygame.key.get_pressed()[i] for i in {pygame.K_UP, pygame.K_DOWN, pygame.K_RIGHT, pygame.K_LEFT}):
+            self.status = "stationary"
 
+        #Adjust diagonal movement
         if dx != 0 and dy != 0:
             diagonal_factor = speed / (2 ** 0.5)
             dx *= diagonal_factor / speed
             dy *= diagonal_factor / speed
+            self.status = "left" if dx < 0 else "right"
 
-        new_x = self.centroid[0] + dx
-        new_y = self.centroid[1] + dy
+        #Define new positions
+        new_centroid = [self.centroid[0] + dx, self.centroid[1] + dy]
+        new_hitbox = Hitbox(new_centroid, 2*self.radius -1, 2*self.radius -1, 90)
 
-        new_x = max(75 + 32//2, min(new_x, FIELD_WIDTH + 75 - 32//2))
-        new_y = max(37 + 48//2, min(new_y, FIELD_HEIGHT + 37 - 48//2))
+        #Check validity
+        valid_move = False
+        if new_hitbox.collides_with(field_box, check_contain=True):
+            valid_move = True
+        
+        #Update everything
+        if valid_move:
+            self.centroid = new_centroid
+            self.update_positions()
 
-        self.centroid[0] = new_x
-        self.centroid[1] = new_y
-        self.sprite_pos = [self.centroid[0]-16, self.centroid[1]-24]
+    def shoot(self, bullets):
+        bullet_positions = [[self.centroid[0]-12, self.centroid[1]-10],
+                            [self.centroid[0]+12, self.centroid[1]-10]]
+        for bullet_pos in bullet_positions:
+            bullet = Bullet("player", speed=12, damage=3, centroid=bullet_pos, angle=90, sprite_sheet=self.sprite_sheet)
+            bullets.append(bullet)
 
-    def shoot(self, sprite_sheet, frame_timer, rate):
-        if frame_timer%rate ==0:
-            x, y = self.centroid
-            bullet, bullet2 = Bullet([0, -12], 20, [x-10, y-28], sprite_sheet), Bullet([0, -12], 20, [x+10, y-28], sprite_sheet)
-            self.bullets.extend([bullet, bullet2])
-    
-    def frame_to_display(self, frame_timer):
-        frames = self.stand_frame if self.direction==0 else (self.right_frames if self.direction=="right" else self.left_frames)
-        current_frame = get_next_frame(frames, frame_timer, self.direction)
-        return current_frame
-    
     def display_centroid(self, screen):
         BLACK = (0, 0, 0)
         WHITE = (255, 255, 255)
         pygame.draw.circle(screen, BLACK, self.centroid, self.radius)
         pygame.draw.circle(screen, WHITE, self.centroid, self.radius-2)
-
-    def update_bullet(self, screen, enemies, background_rect, main_background_edge):
-        bullets_to_remove = []
-    
-        for bullet in self.bullets[:]:
-            screen.blit(bullet.sprite[0], bullet.sprite_pos) if bullet.hitbox.colliderect(background_rect) else bullets_to_remove.append(bullet)
-            rebuild_background(screen, enemies, main_background_edge)
-            bullet.move() if bullet.hitbox.colliderect(background_rect) else bullets_to_remove.append(bullet)
-            for enemy in enemies[:]:
-                if bullet.hitbox.colliderect(enemy.hitbox):
-                    bullets_to_remove.append(bullet)
-                    enemy.health -= bullet.damage
-        for bullet in bullets_to_remove:
-            if bullet in self.bullets:
-                self.bullets.remove(bullet)
-        remove_outbound_bullets(self.bullets, background_rect)
-        
-
-class Enemy:
-    def __init__(self, identity, centroid, health, speed, bullets, sprite_sheet):
-        self.identity = identity
-        self.centroid = centroid
-        self.health = health
-        self.speed = speed
-        self.alpha = 698/health
-        self.bullets = bullets
-        self.direction = 0
-        self.hitbox = pygame.Rect(self.centroid[0]-16, self.centroid[1]-24, 32, 48)
-        self.sprite_pos = [centroid[0]-16, centroid[1]-24]
-        self.stand_frames = get_sprite_frames(sprite_sheet, 282, 16, 32, 48, 8, "up or down")
-        self.right_frames = get_sprite_frames(sprite_sheet, 282, 112, 32, 48, 8, "right")
-        self.left_frames = get_sprite_frames(sprite_sheet, 282, 64, 32, 48, 8, "left")
-
-    def move(self, destination):
-        start_x, start_y = self.centroid[0], self.centroid[1]
-        dest_x, dest_y = destination[0], destination[1]
-
-        dx = dest_x - start_x
-        dy = dest_y - start_y
-        distance = math.sqrt(dx**2 + dy**2)
-
-        if distance <= self.speed or distance < 1.0:
-            self.centroid[0] = dest_x
-            self.centroid[1] = dest_y
-            self.direction = 0
-            self.sprite_pos = [self.centroid[0]-16, self.centroid[1]-24]
-            self.hitbox.x, self.hitbox.y = self.centroid[0]-16, self.centroid[1]-24
-            return True
-        else:
-            unit_x = dx / distance
-            unit_y = dy / distance
-            v_x = unit_x * self.speed
-            v_y = unit_y * self.speed
-            self.centroid[0] += v_x
-            self.centroid[1] += v_y
-            self.direction = "right" if v_x > 0 else ("left" if v_x < 0 else 0)
-            self.sprite_pos = [self.centroid[0]-16, self.centroid[1]-24]
-            self.hitbox.x, self.hitbox.y = self.centroid[0]-16, self.centroid[1]-24
-            return False
-
-    def display_health_bar(self, screen):
-        pygame.draw.rect(screen, (255, 255, 255), (50, 4, 700, 10))
-        pygame.draw.rect(screen, (0, 255, 0), (51, 5, self.alpha*self.health, 8))
-
-    def frame_to_display(self, frame_timer):
-        frames = self.stand_frames if self.direction==0 else (self.right_frames if self.direction=="right" else self.left_frames)
-        current_frame = get_next_frame(frames, frame_timer, self.direction)
-        return current_frame
-
-    
 
     
 

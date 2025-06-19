@@ -1,49 +1,69 @@
 import pygame
 from utils import*
 from player import*
+from enemy import*
+from collections import deque
 
 pygame.init()
 pygame.mixer.init()
 
+#Initial window specs
 WINDOW_WIDTH, WINDOW_HEIGHT = 800, 600
 FIELD_WIDTH, FIELD_HEIGHT = 400, 525
+FIELD_TOPLEFT = [75, 37]
+FIELD_CENTER = [FIELD_TOPLEFT[0]+FIELD_WIDTH//2, FIELD_TOPLEFT[1]+FIELD_HEIGHT//2]
 
-pygame.display.set_icon(pygame.image.load('Assets\icon.png'))
+#Initial window setup
+pygame.display.set_icon(pygame.image.load('Assets/icon.png'))
 pygame.display.set_caption("東方風神録2")
 screen = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
-background = load_background(WINDOW_WIDTH, WINDOW_HEIGHT)
-background_rect = pygame.Rect(75, 37, WINDOW_WIDTH, WINDOW_HEIGHT)
-main_background_edge = pygame.image.load('Assets\main_background_edge.png').convert_alpha()
+
+#Menu setup
 menu, title, start_button, hovered_start_button = load_menu(WINDOW_WIDTH, WINDOW_HEIGHT)
-sprite_sheet = pygame.image.load('Assets\spritesheet.png').convert_alpha()
+start_menu_music = True
 
+#Main game background setup
+background = load_background_image(WINDOW_WIDTH, WINDOW_HEIGHT)
+background_edge = pygame.image.load('Assets/main_background_edge.png').convert_alpha()
 
-BLACK = (0, 0, 0)
-GREEN = (0, 255, 0)
-WHITE = (255, 255, 255)
+#Field setup
+field_box = Hitbox(FIELD_CENTER, FIELD_WIDTH, FIELD_HEIGHT, 0)
 
-player_init_pos = [(FIELD_WIDTH//2)+75+16, (4*FIELD_HEIGHT//5)+37]
-player = Player(player_init_pos, radius=5, speed=4, bullets=[], sprite_sheet=sprite_sheet)
+#Main game assets
+player_sprite_sheet = pygame.image.load('Assets/sanae_spritesheet.png').convert_alpha()
+enemy_sprite_sheet = pygame.image.load('Assets/enemy_spritesheet.png').convert_alpha()
+boss_sprite_sheet = pygame.image.load('Assets/boss_spritesheet.png').convert_alpha()
+#Game audios
+pygame.mixer.music.load('Assets/menu_music.mp3')
 
-enemy = Enemy("boss", [(FIELD_WIDTH//2)+75, 70], 10000, 2, [], sprite_sheet)
-path = [[100, 100], [400, 200], [300, 50], [288, 288]]
-current_target_index = 0
+#Player initialization
+player_initial_position = [FIELD_TOPLEFT[0]+FIELD_WIDTH//2, FIELD_TOPLEFT[1]+FIELD_HEIGHT//2]
+player = Player(FIELD_CENTER, radius=5, speed=5, lives=3, spellcard=3, sprite_sheet=player_sprite_sheet)
+
+#Enemy initialization
+enemy = Dummy(FIELD_CENTER, (0, 255, 0))
 enemies = [enemy]
 
-
+#Main game attributes
 running = True
 clock = pygame.time.Clock()
 game_started = False
-frame_timer = 0
-music = True
+global_bullets = []
+FPS = 60
 
 
+#Main game initialization
 while running:
+
+    dt = clock.tick(FPS)/1000.0
     keys = pygame.key.get_pressed()
 
+    #[FOR ALL] Obtain events
     for event in pygame.event.get():
+        #[FOR ALL] Quit game options
         if event.type == pygame.QUIT or (event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE):
             running = False
+        #[MENU] Player click options
         if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1 and not game_started:
             clicked_pos = pygame.mouse.get_pos()
             if start_button.get_rect(topleft=(WINDOW_WIDTH//2 - start_button.get_width()//2, 450)).collidepoint(clicked_pos):
@@ -51,50 +71,48 @@ while running:
                 display_loading_screen(screen)
                 game_started = True
 
+    #[MENU] Menu operations
     if not game_started:
-        if music:
-            pygame.mixer.music.load('Assets\menu_music.mp3')
+        #[MENU] Set up background music
+        if start_menu_music:
             pygame.mixer.music.set_volume(0.15)
             pygame.mixer.music.play(-1, fade_ms=3000)
-        screen.blit(menu, (0, 0))
-        screen.blit(title, (WINDOW_WIDTH//2 - title.get_width()//2, 90))
-        screen.blit(start_button, (WINDOW_WIDTH//2 - start_button.get_width()//2, 450))
-
+        #[MENU] Display menu
+        build_menu(screen, menu, title, start_button, hovered_start_button)
+        #[MENU] Handle cursor hovering effect
         hover_pos = pygame.mouse.get_pos()
         if start_button.get_rect(topleft=(WINDOW_WIDTH//2 - start_button.get_width()//2, 450)).collidepoint(hover_pos):
             screen.blit(hovered_start_button, (WINDOW_WIDTH//2 - hovered_start_button.get_width()//2, 450))
         else:
             screen.blit(start_button, (WINDOW_WIDTH//2 - start_button.get_width()//2, 450))
-        music = False
-
-    #Main Game Loop
+        start_menu_music = False
+    #[MAIN GAME] Main game operations
     if game_started:
-
+        #[MAIN GAME] Display background
         screen.blit(background, (0, 0))
-        rebuild_background(screen, enemies, main_background_edge)
 
-        #Enemy
-        for enemy in enemies:
-            enemy_current_frame = enemy.frame_to_display(frame_timer)
-            screen.blit(enemy_current_frame, enemy.sprite_pos)
-            if current_target_index != -1:
-                current_target_index = move_through_path(enemy, path, current_target_index)
-
-        #Player
-        player.read_move(keys, FIELD_WIDTH, FIELD_HEIGHT)
-        current_frame = player.frame_to_display(frame_timer)
-        screen.blit(current_frame, player.sprite_pos)
-
-        if (keys[pygame.K_LSHIFT]):
+        #[MAIN GAME] Player Handling
+        player.read_move(keys, field_box=field_box, screen=screen)
+        player.draw(dt, screen)
+        if keys[pygame.K_z]:
+            if fire_rate_limitation(dt, 0.1):
+                player.shoot(global_bullets)
+        if keys[pygame.K_LSHIFT]:
             player.display_centroid(screen)
-        if (keys[pygame.K_z]):
-            player.shoot(sprite_sheet, frame_timer, 5)
-        player.update_bullet(screen, enemies, background_rect, main_background_edge)
 
-        show_position(screen, player.centroid)
+        #[MAIN GAME] Enemy handling
+        for enemy in enemies:
+            enemy.draw(screen)
+        
+        #[MAIN GAME] Bullet handling
+        global_bullets = update_bullets(global_bullets, player, enemies)
+        for bullet in global_bullets:
+            bullet.draw(dt, screen)
+
+        #[MAIN GAME] Update edge
+        screen.blit(background_edge, (0, 0))
+    
 
     pygame.display.flip()
-    clock.tick(60)
-    frame_timer = (frame_timer+1) if frame_timer < 60 else 0
 
 pygame.quit()
