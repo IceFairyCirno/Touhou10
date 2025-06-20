@@ -54,8 +54,8 @@ class Enemy:
                 self.hitbox = Hitbox(self.centroid, self.current_frames[0].get_width(), self.current_frames[0].get_height(), 0)
         elif self.identity == "fairy":
             if self.name == "Blue Fairy":
-                self.default_frames = load_frames(sprite_sheet, blue_fairy_default_frames)
-                self.right_frames = load_frames(sprite_sheet, blue_fairy_right_frames)
+                self.default_frames = load_frames(sprite_sheet, blue_fairy_default_frames, "default")
+                self.right_frames = load_frames(sprite_sheet, blue_fairy_right_frames, "right")
                 self.left_frames = [pygame.transform.flip(frame, True, False) for frame in self.right_frames]
                 self.attack_frames = self.default_frames  # no attack frames for Blue Fairy
                 self.current_frames = self.default_frames
@@ -172,10 +172,8 @@ class Enemy:
         speed = random.randint(1, 5)
         if self.attack == True:
             for angle in Patterns[pattern]:
-                bullet = Bullet("boss", speed, 5, self.centroid, angle, self.bullet_sprite_sheet)
+                bullet = Bullet(self.identity, speed, 5, self.centroid, angle, self.bullet_sprite_sheet)
                 bullets.append(bullet)
-
-
 
 
     

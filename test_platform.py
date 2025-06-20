@@ -2,7 +2,6 @@ import pygame
 from utils import*
 from player import*
 from enemy import*
-
 from collections import deque
 
 pygame.init()
@@ -24,7 +23,8 @@ menu, title, start_button, hovered_start_button = load_menu(WINDOW_WIDTH, WINDOW
 start_menu_music = True
 
 #Main game background setup
-background = load_background_image(WINDOW_WIDTH, WINDOW_HEIGHT)
+background = pygame.Surface((400, 525))
+background.fill((0, 0, 0))
 background_edge = pygame.image.load('Assets/background_edge.png').convert_alpha()
 sidebar_items = pygame.image.load('Assets/sidebar_items_spritesheet.png').convert_alpha()
 texts = load_frames(sidebar_items, [[359, 5, 166, 47], [535, 5, 144, 74], [689, 5, 138, 43], [837, 5, 122, 39], [973, 12, 42, 35]], "texts")
@@ -33,6 +33,7 @@ texts = [pygame.transform.smoothscale(text, (text.get_width()//2, text.get_heigh
 
 #Field setup
 field_box = Hitbox(FIELD_CENTER, FIELD_WIDTH, FIELD_HEIGHT, 0)
+outer_field_box = Hitbox(FIELD_CENTER, FIELD_WIDTH+30, FIELD_HEIGHT+30, 0)
 
 #Main game assets
 player_sprite_sheet = pygame.image.load('Assets/sanae_spritesheet.png').convert_alpha()
@@ -47,9 +48,14 @@ player_initial_position = [FIELD_TOPLEFT[0]+FIELD_WIDTH//2, FIELD_TOPLEFT[1]+FIE
 player = Player(FIELD_CENTER, radius=5, speed=5, lives=3, spellcard=3, sprite_sheet=player_sprite_sheet)
 
 #Enemy initialization
-path = deque(generate_coordinates(10))
+paths = [deque(generate_coordinates(10))]
+
 enemy = Enemy("boss", "Reimu", FIELD_CENTER, 10000, 2, boss_sprite_sheet, bullet_sprite_sheet)
 enemies = [enemy]
+for i in range(3):
+    paths.append(deque(generate_coordinates(7)))
+    enemies.append(Enemy("fairy", "Blue Fairy", [100, 100], 10, 4, enemy_sprite_sheet, bullet_sprite_sheet))
+
 
 #Main game attributes
 running = True
@@ -96,7 +102,7 @@ while running:
     #[MAIN GAME] Main game operations
     if game_started:
         #[MAIN GAME] Display background
-        screen.blit(background, (0, 0))
+        screen.blit(background, (75, 37))
 
         #[MAIN GAME] Player Handling
         player.read_move(keys, field_box=field_box, screen=screen)
@@ -108,21 +114,27 @@ while running:
             player.display_centroid(screen)
 
         #[MAIN GAME] Enemy handling
-        for enemy in enemies:
-            path = enemy.move_by_path(path)
+        for i in range(len(enemies)):
+            enemy = enemies[i]
+            paths[i] = enemy.move_by_path(paths[i])
             enemy.draw(dt, screen)
-            if fire_rate_limitation(dt, 0.2, enemy):
-                enemy.shoot(global_bullets, "flower")
+            if enemy.identity == "boss":
+                if fire_rate_limitation(dt, 0.2, enemy):
+                    enemy.shoot(global_bullets, "flower")
+            else:
+                if fire_rate_limitation(dt, 0.2, enemy) :
+                    enemy.shoot(global_bullets, "star")
         
         #[MAIN GAME] Bullet handling
-        global_bullets = update_bullets(global_bullets, player, enemies)
+        global_bullets = update_bullets(global_bullets, player, enemies, outer_field_box)
         for bullet in global_bullets:
             bullet.draw(dt, screen)
 
         #[MAIN GAME] Update edge
         screen.blit(background_edge, (0, 0))
         build_sidebar_items(screen, texts, player)
-
+        show_position(screen, player.centroid)
+        print(f"Number of bullets: {len(global_bullets)}")
     pygame.display.flip()
 
 pygame.quit()

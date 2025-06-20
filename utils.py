@@ -3,10 +3,6 @@ import math
 import random
 
 
-def load_background_image(WINDOW_WIDTH, WINDOW_HEIGHT):
-    background = pygame.image.load('Assets/background.png')
-    background = pygame.transform.scale(background, (WINDOW_WIDTH, WINDOW_HEIGHT))
-    return background
 
 def load_menu(WINDOW_WIDTH, WINDOW_HEIGHT):
     menu_background = pygame.image.load('Assets/Menu_resized.jpg')
@@ -33,7 +29,6 @@ def build_sidebar_items(screen, items, player):
     for i in range(player.lives):
         screen.blit(player_live_icon, (595+(30*i), 128))
     screen.blit(power_text, (511, 157))
-    
 
 def fade(screen, fade_color=(0, 0, 0), out=True):
     fade_surface = pygame.Surface(screen.get_size())
@@ -129,6 +124,7 @@ class Hitbox:
             (other.points[2][0] - other.points[1][0], other.points[2][1] - other.points[1][1]),]
         axes = [(edges1[0][1], -edges1[0][0]), (edges1[1][1], -edges1[1][0]), (edges2[0][1], -edges2[0][0]), (edges2[1][1], -edges2[1][0]),]
         
+        #Check self inside other or nnot
         if check_contain:
             # Project all points onto each axis
             for axis in axes:
@@ -185,6 +181,9 @@ class Hitbox:
 Sanae_A_Bullets = [[3, 163, 59, 9], [67, 163, 59, 10], [131, 163, 59, 10], [195, 163, 59, 10]]
 Sanae_B_Bullets = [[196, 177, 60, 14]]
 Reimu_Bullets = [[40, 512, 14, 16]]
+Fairy_Bullets = [[43, 53, 16, 16]]
+
+Bullet_sets ={"player": Sanae_A_Bullets, "boss": Reimu_Bullets, "fairy": Fairy_Bullets}
 
 class Bullet:
 
@@ -197,10 +196,7 @@ class Bullet:
         self.angle = angle #degree
 
         #Bullet frames data
-        if self.shooter == "player":
-            self.bullet_set = Sanae_A_Bullets
-        else:
-            self.bullet_set = Reimu_Bullets
+        self.bullet_set = Bullet_sets[self.shooter]
         self.frames = load_frames(sprite_sheet, self.bullet_set, "bullet")
         self.frame_idx = 0
         self.frame_timer = 0
@@ -226,9 +222,9 @@ class Bullet:
 
         screen.blit(self.frames[self.frame_idx], (self.sprite_pos[0], self.sprite_pos[1]))
 
-def update_bullets(bullets, player, enemies):
+def update_bullets(bullets, player, enemies, field_box):
     #Update every attribute for every bullets
-    bullets_to_remove = []
+    bullets_remain = []
 
     for bullet in bullets:
         dx, dy = bullet.speed*math.cos(math.radians(bullet.angle)), -bullet.speed*math.sin(math.radians(bullet.angle))
@@ -236,21 +232,26 @@ def update_bullets(bullets, player, enemies):
         bullet.hitbox.center = [bullet.hitbox.center[0]+dx, bullet.hitbox.center[1]+dy]
         bullet.hitbox.update()
         bullet.update_sprite_pos()
-        
-        for enemy in enemies:
-            if bullet.hitbox.collides_with(enemy.hitbox) and bullet.shooter == "player":
-                enemy.health -= bullet.damage
-                bullet.damage = 0
-                bullets_to_remove.append(bullet)
-                
-        if bullet.hitbox.collides_with(player.hitbox) and bullet.shooter in ("boss", "fairy"):
-            player.lives -= 1
-            bullets_to_remove.append(bullet)
-        
-    for bullet in bullets_to_remove:
-        bullets.remove(bullet)
 
-    return bullets
+        if not bullet.hitbox.collides_with(field_box, check_contain=True):
+            continue  # Skip to next bullet (effectively removes it)
+        
+        # Handle collisions based on shooter type
+        if bullet.shooter == "player":
+            for enemy in enemies:
+                if bullet.hitbox.collides_with(enemy.hitbox):
+                    enemy.health -= bullet.damage
+                    bullet.damage = 0
+                    break  # Bullet hit an enemy, no need to check more
+            else:
+                bullets_remain.append(bullet)  # Keep bullet if no collision
+        else:  # Bullet from "boss" or "fairy"
+            if bullet.hitbox.collides_with(player.hitbox):
+                player.lives -= 1
+            else:
+                bullets_remain.append(bullet)  # Keep bullet if no collision
+
+    return bullets_remain
 
 class Dummy:
     def __init__(self, center, color):
