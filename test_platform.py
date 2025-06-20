@@ -2,6 +2,7 @@ import pygame
 from utils import*
 from player import*
 from enemy import*
+
 from collections import deque
 
 pygame.init()
@@ -24,12 +25,16 @@ start_menu_music = True
 
 #Main game background setup
 background = load_background_image(WINDOW_WIDTH, WINDOW_HEIGHT)
-background_edge = pygame.image.load('Assets/main_background_edge.png').convert_alpha()
+background_edge = pygame.image.load('Assets/background_edge.png').convert_alpha()
+sidebar_items = pygame.image.load('Assets/sidebar_items_spritesheet.png').convert_alpha()
+texts = load_frames(sidebar_items, [[359, 5, 166, 47], [535, 5, 144, 74], [689, 5, 138, 43], [837, 5, 122, 39], [973, 12, 42, 35]], "texts")
+texts = [pygame.transform.smoothscale(text, (text.get_width()//2, text.get_height()//2)) for text in texts]
+
 
 #Field setup
 field_box = Hitbox(FIELD_CENTER, FIELD_WIDTH, FIELD_HEIGHT, 0)
 
-#Main game assetsz
+#Main game assets
 player_sprite_sheet = pygame.image.load('Assets/sanae_spritesheet.png').convert_alpha()
 enemy_sprite_sheet = pygame.image.load('Assets/enemy_spritesheet.png').convert_alpha()
 boss_sprite_sheet = pygame.image.load('Assets/boss_spritesheet.png').convert_alpha()
@@ -43,13 +48,13 @@ player = Player(FIELD_CENTER, radius=5, speed=5, lives=3, spellcard=3, sprite_sh
 
 #Enemy initialization
 path = deque(generate_coordinates(10))
-enemy = Enemy("boss", "Reimu", FIELD_CENTER, 10000, 2, boss_sprite_sheet)
+enemy = Enemy("boss", "Reimu", FIELD_CENTER, 10000, 2, boss_sprite_sheet, bullet_sprite_sheet)
 enemies = [enemy]
 
 #Main game attributes
 running = True
 clock = pygame.time.Clock()
-game_started = False
+game_started = True
 global_bullets = []
 FPS = 60
 
@@ -107,7 +112,7 @@ while running:
             path = enemy.move_by_path(path)
             enemy.draw(dt, screen)
             if fire_rate_limitation(dt, 0.2, enemy):
-                enemy.shoot(global_bullets, bullet_sprite_sheet)
+                enemy.shoot(global_bullets, "flower")
         
         #[MAIN GAME] Bullet handling
         global_bullets = update_bullets(global_bullets, player, enemies)
@@ -116,7 +121,7 @@ while running:
 
         #[MAIN GAME] Update edge
         screen.blit(background_edge, (0, 0))
-    
+        build_sidebar_items(screen, texts, player)
 
     pygame.display.flip()
 

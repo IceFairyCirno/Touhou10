@@ -20,13 +20,14 @@ Patterns = {
 }
 
 class Enemy:
-    def __init__(self, identity, name, centroid, health, speed, sprite_sheet, frame_duration=0.1):
+    def __init__(self, identity, name, centroid, health, speed, sprite_sheet, bullet_sprite_sheet, frame_duration=0.1):
         self.identity = identity
         self.name = name
         self.centroid = centroid
         self.health = health
         self.speed = speed
         self.sprite_sheet = sprite_sheet
+        self.bullet_sprite_sheet = bullet_sprite_sheet
         self.frame_duration = frame_duration
         
         self.current_frame = 0
@@ -167,11 +168,11 @@ class Enemy:
                 path.popleft()
         return path
     
-    def shoot(self, bullets, sprite_sheet):
+    def shoot(self, bullets, pattern):
+        speed = random.randint(1, 5)
         if self.attack == True:
-            pattern = random.choice(["star", "double spiral", "chaos", "flower"])
             for angle in Patterns[pattern]:
-                bullet = Bullet("enemy", 5, 5, self.centroid, angle, sprite_sheet)
+                bullet = Bullet("boss", speed, 5, self.centroid, angle, self.bullet_sprite_sheet)
                 bullets.append(bullet)
 
 

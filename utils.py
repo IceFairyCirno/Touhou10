@@ -2,8 +2,9 @@ import pygame
 import math
 import random
 
+
 def load_background_image(WINDOW_WIDTH, WINDOW_HEIGHT):
-    background = pygame.image.load('Assets/main_background.png')
+    background = pygame.image.load('Assets/background.png')
     background = pygame.transform.scale(background, (WINDOW_WIDTH, WINDOW_HEIGHT))
     return background
 
@@ -23,6 +24,16 @@ def build_menu(screen, menu, title, start_button, hovered_start_button):
     screen.blit(menu, (0, 0))
     screen.blit(title, (800//2 - title.get_width()//2, 90))
     screen.blit(start_button, (800//2 - start_button.get_width()//2, 450))
+
+def build_sidebar_items(screen, items, player):
+    hiscore_text, player_text, power_text, score_text, player_live_icon = items
+    screen.blit(hiscore_text, (511, 50))
+    screen.blit(score_text, (511, 80))
+    screen.blit(player_text, (511, 122))
+    for i in range(player.lives):
+        screen.blit(player_live_icon, (595+(30*i), 128))
+    screen.blit(power_text, (511, 157))
+    
 
 def fade(screen, fade_color=(0, 0, 0), out=True):
     fade_surface = pygame.Surface(screen.get_size())
@@ -60,27 +71,17 @@ def generate_coordinates(n):
     return coordinates
 
 def load_frames(surface, specs, status, debug=False):
-    #Return the frames into a list of images, return a single image if only input one spec
-
-    if len(specs) == 1:
-        start_x, start_y, width, height = specs[0]
+    #Return the frames into a list of images
+    sub_photos = []
+    for i, spec in enumerate(specs):
+        start_x, start_y, width, height = spec
         rect = pygame.Rect(start_x, start_y, width, height)
         sub_surface = surface.subsurface(rect)
+        sub_photos.append(sub_surface)
         if debug:
             save_path = "debug_sprites/"
-            pygame.image.save(sub_surface, f"{save_path}{status}sprite_0.png")
-        return [sub_surface]
-    else:
-        sub_photos = []
-        for i, spec in enumerate(specs):
-            start_x, start_y, width, height = spec
-            rect = pygame.Rect(start_x, start_y, width, height)
-            sub_surface = surface.subsurface(rect)
-            sub_photos.append(sub_surface)
-            if debug:
-                save_path = "debug_sprites/"
-                pygame.image.save(sub_surface, f"{save_path}{status}sprite_{i}.png")
-        return sub_photos
+            pygame.image.save(sub_surface, f"{save_path}{status}sprite_{i}.png")
+    return sub_photos
 
 class Hitbox:
     #Hitbox object with OBB method
@@ -242,7 +243,7 @@ def update_bullets(bullets, player, enemies):
                 bullet.damage = 0
                 bullets_to_remove.append(bullet)
                 
-        if bullet.hitbox.collides_with(player.hitbox) and bullet.shooter == "enemy":
+        if bullet.hitbox.collides_with(player.hitbox) and bullet.shooter in ("boss", "fairy"):
             player.lives -= 1
             bullets_to_remove.append(bullet)
         

@@ -24,7 +24,7 @@ start_menu_music = True
 
 #Main game background setup
 background = load_background_image(WINDOW_WIDTH, WINDOW_HEIGHT)
-background_edge = pygame.image.load('Assets/main_background_edge.png').convert_alpha()
+background_edge = pygame.image.load('Assets/background_edge.png').convert_alpha()
 
 #Field setup
 field_box = Hitbox(FIELD_CENTER, FIELD_WIDTH, FIELD_HEIGHT, 0)

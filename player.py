@@ -1,7 +1,5 @@
 import pygame
-import math
-import os
-from utils import *
+from utils import load_frames, Hitbox, Bullet
 
 Sanae_default_frames = [[3, 3, 26, 44], [35, 3, 26, 44], [67, 3, 26, 44], [99, 3, 26, 44], [131, 3, 26, 44], [163, 3, 26, 44], [195, 3, 26, 44], [227, 3, 26, 44]]
 Sanae_left_frames = [[3, 53, 26, 40], [33, 53, 28, 41], [64, 53, 27, 40], [99, 53, 28, 41], [131, 53, 28, 41], [163, 53, 28, 41], [195, 53, 28, 41], [227, 53, 28, 41]]
@@ -46,14 +44,6 @@ class Player():
         self.hitbox.update()
 
     def draw(self, dt: float, screen: pygame.Surface):
-        """
-        Draw the current animation frame based on self.status, using frame_timer.
-        Each frame list has 8 frames. Loops all 8 default frames for stationary/up/down,
-        loops last 4 frames (indices 4–7) for right/left/diagonal.
-        Resets frame_timer and current_frame when transitioning to stationary/up/down.
-        dt: Delta time in seconds (from clock.tick(60)/1000.0)
-        screen: Pygame Surface to draw on
-        """
         # Update frame timer
         self.frame_timer += dt
 
@@ -92,7 +82,7 @@ class Player():
         # Update previous status
         self.prev_status = self.status
     
-    def read_move(self, keys, field_box: Hitbox, screen):
+    def read_move(self, keys, field_box, screen):
         dy, dx = 0, 0
         speed = self.speed
         #Slower is pressed left shift
